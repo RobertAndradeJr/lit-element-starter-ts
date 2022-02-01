@@ -51,17 +51,27 @@ export class MyElement extends LitElement {
 
   private _draw() {
     const canvas = this._canvas as HTMLCanvasElement
+    canvas.height = 400
+    canvas.width = 400
     const ctx = canvas.getContext('2d') as CanvasRenderingContext2D
+    const cx = 200;
+    const cy = 200;
+    const radius = 200;
+    const colors = ['rgb(0,148,201)', 'rgb(241,200,49)', 'rgb(0,149,59)', 'rgb(199,50,58)'];
 
-    ctx.beginPath();
-    ctx.arc(75, 75, 50, 0, Math.PI * 2, true); // Outer circle
-    ctx.moveTo(110, 75);
-    ctx.arc(75, 75, 35, 0, Math.PI, false);  // Mouth (clockwise)
-    ctx.moveTo(65, 65);
-    ctx.arc(60, 65, 5, 0, Math.PI * 2, true);  // Left eye
-    ctx.moveTo(95, 65);
-    ctx.arc(90, 65, 5, 0, Math.PI * 2, true);  // Right eye
-    ctx.stroke();
+    for (let i = 0; i < 4; i++) {
+      const startAngle = i * Math.PI / 2;
+      const endAngle = startAngle + Math.PI / 2;
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.arc(cx, cy, radius, startAngle, endAngle);
+      ctx.closePath();
+      ctx.fillStyle = colors[i];
+      ctx.strokeStyle = 'white'
+      ctx.lineWidth = 5
+      ctx.fill();
+      ctx.stroke();
+    }
   }
 
   /**
