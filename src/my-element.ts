@@ -43,7 +43,6 @@ export class MyElement extends LitElement {
 
   override render() {
     return html`
-      <h1>${this.sayHello(this.name)}!</h1>
       <canvas id="canvas">Fallback Content</canvas>
       <slot></slot>
     `;
@@ -72,14 +71,6 @@ export class MyElement extends LitElement {
       ctx.fill();
       ctx.stroke();
     }
-  }
-
-  /**
-   * Formats a greeting
-   * @param name The name to say "Hello" to
-   */
-  sayHello(name: string): string {
-    return `Hello, ${name}`;
   }
 
   protected override firstUpdated(_changedProperties: Map<string | number | symbol, unknown>): void {
