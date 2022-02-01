@@ -5,7 +5,7 @@
  */
 
 import {LitElement, html, css} from 'lit';
-import {customElement, property} from 'lit/decorators.js';
+import { customElement, property, query } from 'lit/decorators.js';
 
 /**
  * An example element.
@@ -16,6 +16,10 @@ import {customElement, property} from 'lit/decorators.js';
  */
 @customElement('my-element')
 export class MyElement extends LitElement {
+  @query('#canvas')
+  _canvas!: HTMLCanvasElement | null;
+
+
   static override styles = css`
     :host {
       display: block;
@@ -38,31 +42,26 @@ export class MyElement extends LitElement {
   count = 0;
 
   override render() {
-    const canvas = document.createElement('canvas')
-    canvas.innerText = 'Fallback Content'
-    const ctx = canvas.getContext('2d')
-    canvas.width = 800
-    canvas.height = 800;
-    if (ctx) {
-      ctx.fillStyle = 'rgb(200, 0, 0)';
-      ctx.fillRect(10, 10, 50, 50);
-
-      ctx.fillStyle = 'rgba(0, 0, 200, 0.5)';
-      ctx.fillRect(30, 30, 50, 50);
-    }
     return html`
       <h1>${this.sayHello(this.name)}!</h1>
-      ${canvas}
-      <button @click=${this._onClick} part="button">
-        Click Count: ${this.count}
-      </button>
+      <canvas id="canvas">Fallback Content</canvas>
       <slot></slot>
     `;
   }
 
-  private _onClick() {
-    this.count++;
-    this.dispatchEvent(new CustomEvent('count-changed'));
+  private _draw() {
+    const canvas = this._canvas as HTMLCanvasElement
+    const ctx = canvas.getContext('2d') as CanvasRenderingContext2D
+
+    ctx.beginPath();
+    ctx.arc(75, 75, 50, 0, Math.PI * 2, true); // Outer circle
+    ctx.moveTo(110, 75);
+    ctx.arc(75, 75, 35, 0, Math.PI, false);  // Mouth (clockwise)
+    ctx.moveTo(65, 65);
+    ctx.arc(60, 65, 5, 0, Math.PI * 2, true);  // Left eye
+    ctx.moveTo(95, 65);
+    ctx.arc(90, 65, 5, 0, Math.PI * 2, true);  // Right eye
+    ctx.stroke();
   }
 
   /**
@@ -71,6 +70,10 @@ export class MyElement extends LitElement {
    */
   sayHello(name: string): string {
     return `Hello, ${name}`;
+  }
+
+  protected override firstUpdated(_changedProperties: Map<string | number | symbol, unknown>): void {
+    this._draw()
   }
 }
 
