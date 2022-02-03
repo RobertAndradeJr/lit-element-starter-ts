@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-import { LitElement, html, css } from 'lit';
-import { customElement, property, query } from 'lit/decorators.js';
+import { LitElement, html, css } from 'lit'
+import { customElement, property, query } from 'lit/decorators.js'
 
 interface Coordinate {
   x: number,
@@ -30,13 +30,13 @@ interface Point {
 @customElement('my-element')
 export class MyElement extends LitElement {
   @query('#canvas')
-  _canvas!: HTMLCanvasElement | null;
+  _canvas!: HTMLCanvasElement | null
 
   @query('#code')
-  _code!: HTMLPreElement | null;
+  _code!: HTMLPreElement | null
 
   @property({ type: Boolean })
-  quadratic = false;
+  quadratic = false
 
 
   static override styles = css`
@@ -119,13 +119,13 @@ export class MyElement extends LitElement {
    * The name to say "Hello" to.
    */
   @property()
-  name = 'World';
+  name = 'World'
 
   /**
    * Width of borders
    */
   @property({ type: Number })
-  borderWidth = 10;
+  borderWidth = 10
 
   override render() {
     return html`
@@ -140,7 +140,7 @@ export class MyElement extends LitElement {
           <span>quadratic</span>
       </div>
       <slot></slot>
-    `;
+    `
   }
 
   private _toggle() {
@@ -201,7 +201,7 @@ export class MyElement extends LitElement {
         arc1: 0,
         arc2: 2 * Math.PI
       }
-    };
+    }
     let drag: string | null = null
     let dPoint: Coordinate = { x: 0, y: 0 }
 
@@ -209,16 +209,16 @@ export class MyElement extends LitElement {
     const init = () => {
 
       // line style defaults
-      ctx.lineCap = "round";
-      ctx.lineJoin = "round";
+      ctx.lineCap = "round"
+      ctx.lineJoin = "round"
 
       //event handles
-      canvas.addEventListener("mousedown", dragStart, false);
-      canvas.addEventListener("mousemove", dragging, false);
-      canvas.addEventListener("mouseup", dragEnd, false);
-      canvas.addEventListener("mouseout", dragEnd, false);
+      canvas.addEventListener("mousedown", dragStart, false)
+      canvas.addEventListener("mousemove", dragging, false)
+      canvas.addEventListener("mouseup", dragEnd, false)
+      canvas.addEventListener("mouseout", dragEnd, false)
 
-      drawScreen();
+      drawScreen()
     }
 
     // draw screen
@@ -226,31 +226,31 @@ export class MyElement extends LitElement {
       const { point: { width, color, fill, radius, arc1, arc2 } } = style
       const { p1, p2, cp1, cp2 } = point
       const { cpline, curve } = style
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.clearRect(0, 0, canvas.width, canvas.height)
       this._draw()
 
       // control lines
-      ctx.lineWidth = cpline.width;
-      ctx.strokeStyle = cpline.color;
+      ctx.lineWidth = cpline.width
+      ctx.strokeStyle = cpline.color
 
-      ctx.beginPath();
-      ctx.moveTo(p1.x, p1.y);
-      ctx.lineTo(cp1.x, cp1.y);
+      ctx.beginPath()
+      ctx.moveTo(p1.x, p1.y)
+      ctx.lineTo(cp1.x, cp1.y)
 
       if (point.cp2) {
-        ctx.moveTo(p2.x, p2.y);
-        ctx.lineTo(cp2.x, cp2.y);
+        ctx.moveTo(p2.x, p2.y)
+        ctx.lineTo(cp2.x, cp2.y)
       } else {
-        ctx.lineTo(p2.x, p2.y);
+        ctx.lineTo(p2.x, p2.y)
       }
-      ctx.stroke();
+      ctx.stroke()
 
       // curve
-      ctx.lineWidth = curve.width;
-      ctx.strokeStyle = curve.color;
+      ctx.lineWidth = curve.width
+      ctx.strokeStyle = curve.color
 
-      ctx.beginPath();
-      ctx.moveTo(p1.x, p1.y);
+      ctx.beginPath()
+      ctx.moveTo(p1.x, p1.y)
       if (cp2) {
         ctx.bezierCurveTo(
           cp1.x,
@@ -259,24 +259,24 @@ export class MyElement extends LitElement {
           cp2.y,
           p2.x,
           p2.y
-        );
+        )
       } else {
         ctx.quadraticCurveTo(
           cp1.x,
           cp1.y,
           p2.x,
           p2.y
-        );
+        )
       }
-      ctx.stroke();
+      ctx.stroke()
 
       // control points
       for (const p in point) {
         const { x, y } = point[p]
-        ctx.lineWidth = width;
-        ctx.strokeStyle = color;
-        ctx.fillStyle = fill;
-        ctx.beginPath();
+        ctx.lineWidth = width
+        ctx.strokeStyle = color
+        ctx.fillStyle = fill
+        ctx.beginPath()
         ctx.arc(
           x,
           y,
@@ -284,12 +284,12 @@ export class MyElement extends LitElement {
           arc1,
           arc2,
           true
-        );
-        ctx.fill();
-        ctx.stroke();
+        )
+        ctx.fill()
+        ctx.stroke()
       }
 
-      showCode();
+      showCode()
     }
 
     // format string for code
@@ -299,34 +299,34 @@ export class MyElement extends LitElement {
       const { p1, cp1, cp2, p2 } = point
       if (firstChild) {
         firstChild.nodeValue = `
-        canvas = document.getElementById("canvas");
+        canvas = document.getElementById("canvas")
         ctx = canvas.getContext("2d")
-        ctx.lineWidth = ${width};
-        ctx.strokeStyle = "${color}";
-        ctx.beginPath();
-        ctx.moveTo(${p1.x}, ${p1.y});
+        ctx.lineWidth = ${width}
+        ctx.strokeStyle = "${color}"
+        ctx.beginPath()
+        ctx.moveTo(${p1.x}, ${p1.y})
         ${cp2 ?
-            `ctx.bezierCurveTo(${cp1.x}, ${cp1.y}, ${cp2.x}, ${cp2.y}, ${p2.x}, ${p2.y});` :
-            `ctx.quadraticCurveTo(${cp1.x}, ${cp1.y}, ${p2.x}, ${p2.y});`
-        }
-        ctx.stroke();
-        `;
+          `ctx.bezierCurveTo(${cp1.x}, ${cp1.y}, ${cp2.x}, ${cp2.y}, ${p2.x}, ${p2.y})` :
+          `ctx.quadraticCurveTo(${cp1.x}, ${cp1.y}, ${p2.x}, ${p2.y})`
+          }
+        ctx.stroke()
+        `
       }
     }
 
     // get coordinates from mouse event
     const MousePos = (event: MouseEvent) => {
-      const { pageX, pageY } = event || window.event;
-      const { offsetLeft, offsetTop } = canvas;
+      const { pageX, pageY } = event || window.event
+      const { offsetLeft, offsetTop } = canvas
       return {
         x: pageX - offsetLeft,
         y: pageY - offsetTop
-      };
+      }
     }
 
     // start dragging
     const dragStart = (event: MouseEvent) => {
-      const e = MousePos(event);
+      const e = MousePos(event)
       const { point: { radius } } = style
 
       let dx = 0
@@ -334,14 +334,14 @@ export class MyElement extends LitElement {
       for (const p in point) {
         const { x, y } = point[p]
         const { x: mouseX, y: mouseY } = e
-        dx = x - mouseX;
-        dy = y - mouseY;
+        dx = x - mouseX
+        dy = y - mouseY
 
         if (dx * dx + dy * dy < radius * radius) {
-          drag = p;
-          dPoint = e;
-          canvas.style.cursor = "move";
-          return;
+          drag = p
+          dPoint = e
+          canvas.style.cursor = "move"
+          return
         }
       }
     }
@@ -349,24 +349,24 @@ export class MyElement extends LitElement {
     // dragging in progress
     function dragging(event: MouseEvent) {
       if (drag) {
-        const e = MousePos(event);
-        point[drag].x += e.x - dPoint.x;
-        point[drag].y += e.y - dPoint.y;
-        dPoint = e;
+        const e = MousePos(event)
+        point[drag].x += e.x - dPoint.x
+        point[drag].y += e.y - dPoint.y
+        dPoint = e
 
-        drawScreen();
+        drawScreen()
       }
     }
 
     // stop dragging
     function dragEnd() {
-      drag = null;
-      canvas.style.cursor = "default";
-      drawScreen();
+      drag = null
+      canvas.style.cursor = "default"
+      drawScreen()
     }
 
-    drawScreen();
-    init();
+    drawScreen()
+    init()
   }
 
   private _draw() {
@@ -375,23 +375,23 @@ export class MyElement extends LitElement {
     canvas.height = 400
     canvas.width = 400
     const ctx = canvas.getContext('2d') as CanvasRenderingContext2D
-    const cx = 200;
-    const cy = 200;
-    const radius = 200;
-    const colors = ['rgb(0,148,201)', 'rgb(241,200,49)', 'rgb(0,149,59)', 'rgb(199,50,58)'];
+    const cx = 200
+    const cy = 200
+    const radius = 200
+    const colors = ['rgb(0,148,201)', 'rgb(241,200,49)', 'rgb(0,149,59)', 'rgb(199,50,58)']
 
     for (let i = 0; i < colors.length; i++) {
-      const startAngle = i * Math.PI / 2;
-      const endAngle = startAngle + Math.PI / 2;
-      ctx.beginPath();
-      ctx.moveTo(cx, cy);
-      ctx.arc(cx, cy, radius, startAngle, endAngle);
-      ctx.closePath();
-      ctx.fillStyle = colors[i];
+      const startAngle = i * Math.PI / 2
+      const endAngle = startAngle + Math.PI / 2
+      ctx.beginPath()
+      ctx.moveTo(cx, cy)
+      ctx.arc(cx, cy, radius, startAngle, endAngle)
+      ctx.closePath()
+      ctx.fillStyle = colors[i]
       ctx.strokeStyle = 'white'
       ctx.lineWidth = borderWidth
-      ctx.fill();
-      ctx.stroke();
+      ctx.fill()
+      ctx.stroke()
     }
   }
 
@@ -402,6 +402,6 @@ export class MyElement extends LitElement {
 
 declare global {
   interface HTMLElementTagNameMap {
-    'my-element': MyElement;
+    'my-element': MyElement
   }
 }
