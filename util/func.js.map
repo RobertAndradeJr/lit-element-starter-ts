@@ -1,0 +1,1 @@
+{"version":3,"file":"func.js","sourceRoot":"","sources":["../src/util/func.ts"],"names":[],"mappings":"AAAA,MAAM,CAAC,MAAM,qBAAqB,GAAG,CAAC,KAAoB,EAAE,EAAE,CAAC,KAAK,CAAC,CAAC,CAAC,MAAM,CAAC,KAAK,CAAC,CAAC,CAAC,CAAC,OAAO,CAAA","sourcesContent":["export const booleanColorConverter = (value: string | null) => value ? String(value) : 'black'\n"]}
