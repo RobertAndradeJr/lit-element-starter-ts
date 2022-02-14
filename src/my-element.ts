@@ -6,7 +6,8 @@
 
 import { LitElement, html, css } from 'lit'
 import { customElement, property, query } from 'lit/decorators.js'
-import { booleanColorConverter } from './util/func'
+import { Graph } from './graph'
+import { booleanColorConverter, quadrantConverter } from './util/func'
 
 interface Coordinate {
   x: number;
@@ -122,7 +123,7 @@ export class MyElement extends LitElement {
   @property({
     type: Number
   })
-  borderWidth = 10;
+  borderWidth = 5;
 
   /**
    * qubic or quadratic arc
@@ -138,6 +139,17 @@ export class MyElement extends LitElement {
     converter: booleanColorConverter
   })
   border?: string;
+
+  /**
+   * 
+   * Which quadrants are emphasized
+   * if any
+   */
+  @property({
+    type: Array,
+    converter: quadrantConverter
+  })
+  quadrants = ['D', 'i', 'S', 'C']
 
   override render() {
     return html`
@@ -156,10 +168,8 @@ export class MyElement extends LitElement {
   }
 
   private _toggle() {
-    console.log('togg', this.quadratic)
     this.quadratic = !this.quadratic
     this._canvasApp()
-    // this.requestUpdate('_quadratic', this._quadratic)
   }
 
   private _canvasApp() {
@@ -301,11 +311,10 @@ export class MyElement extends LitElement {
         ctx.strokeStyle = "${color}"
         ctx.beginPath()
         ctx.moveTo(${p1.x}, ${p1.y})
-        ${
-          cp2
+        ${cp2
             ? `ctx.bezierCurveTo(${cp1.x}, ${cp1.y}, ${cp2.x}, ${cp2.y}, ${p2.x}, ${p2.y})`
             : `ctx.quadraticCurveTo(${cp1.x}, ${cp1.y}, ${p2.x}, ${p2.y})`
-        }
+          }
         ctx.stroke()
         `
       }
@@ -369,54 +378,24 @@ export class MyElement extends LitElement {
   }
 
   private _draw() {
-    const { _canvas, borderWidth, border } = this
+    const { _canvas, border, quadrants } = this
     const canvas = _canvas as HTMLCanvasElement
     canvas.height = 400
     canvas.width = 400
     const ctx = canvas.getContext('2d') as CanvasRenderingContext2D
-    const cx = canvas.height / 2
-    const cy = canvas.width / 2
-    const radius = 200
-    const colors = [
-      'rgb(0,148,201)',
-      'rgb(241,200,49)',
-      'rgb(0,149,59)',
-      'rgb(199,50,58)',
-    ]
-    ctx.lineWidth = borderWidth
+    const graph = new Graph({ ctx, radius: canvas.width / 2 })
 
 
+    graph.baseGraph()
 
-    for (let i = 0; i < colors.length; i++) {
-      const startAngle = (i * Math.PI) / 2
-      const endAngle = startAngle + Math.PI / 2
-      ctx.beginPath()
-      ctx.moveTo(cx, cy)
-      // padding between circle and border
-      // removing 1 border width meets outer border
-      // then 2 border widths of padding
-      console.log('bordy', borderWidth)
-      ctx.arc(cx, cy, radius - (borderWidth * 3), startAngle, endAngle)
-      ctx.closePath()
-      ctx.fillStyle = colors[i]
-      ctx.strokeStyle = 'white'
-      ctx.fill()
-      ctx.stroke()
-    }
+    graph.drawQuadrants(quadrants)
+
+    graph.internalBorderHorizontal()
+
+    graph.internalBorderVertical()
 
     if (border) {
-      ctx.save()
-      ctx.moveTo(cx, cy)
-      ctx.beginPath()
-      // half of border width to have full border in frame
-      // since stroke is half inside half outside of line
-      // and radius goes up to edge of box
-      ctx.arc(cx, cy, radius - (borderWidth / 2), 0, Math.PI * 2)
-      ctx.strokeStyle = border
-      ctx.setLineDash([15, 10])
-      ctx.closePath()
-      ctx.stroke()
-      ctx.restore()
+      graph.dashBorder(border)
     }
   }
 
