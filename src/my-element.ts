@@ -7,19 +7,10 @@
 import { LitElement, html, css } from 'lit'
 import { customElement, property, query } from 'lit/decorators.js'
 import { Graph } from './graph'
+import { Point, Coordinate } from './types'
 import { booleanColorConverter, quadrantConverter } from './util/func'
 
-interface Coordinate {
-  x: number;
-  y: number;
-}
 
-interface Point {
-  [key: string]: Coordinate;
-  p1: Coordinate;
-  p2: Coordinate;
-  cp1: Coordinate;
-}
 
 /**
  * An example element.
@@ -126,6 +117,22 @@ export class MyElement extends LitElement {
   borderWidth = 5;
 
   /**
+   * Width of element
+   */
+  @property({
+    type: Number
+  })
+  width = 100;
+
+  /**
+   * Height of element
+   */
+  @property({
+    type: Number
+  })
+  height = 100;
+
+  /**
    * qubic or quadratic arc
    */
   @property({ type: Boolean })
@@ -174,9 +181,10 @@ export class MyElement extends LitElement {
 
   private _canvasApp() {
     // const drawCanvas = this._draw.bind(this)
+    const { width, height } = this
     const canvas = this._canvas as HTMLCanvasElement
-    canvas.height = 400
-    canvas.width = 400
+    canvas.height = height
+    canvas.width = width
     const ctx = canvas.getContext('2d') as CanvasRenderingContext2D
 
     const point: Point = {
@@ -224,7 +232,7 @@ export class MyElement extends LitElement {
         arc2: 2 * Math.PI,
       },
     }
-    let drag: string | null = null
+    let drag: keyof Point | null = null
     let dPoint: Coordinate = { x: 0, y: 0 }
 
     // define initial points
@@ -260,7 +268,7 @@ export class MyElement extends LitElement {
       ctx.moveTo(p1.x, p1.y)
       ctx.lineTo(cp1.x, cp1.y)
 
-      if (point.cp2) {
+      if (cp2) {
         ctx.moveTo(p2.x, p2.y)
         ctx.lineTo(cp2.x, cp2.y)
       } else {
@@ -283,7 +291,7 @@ export class MyElement extends LitElement {
 
       // control points
       for (const p in point) {
-        const { x, y } = point[p]
+        const { x, y } = point[p as keyof Point] as Coordinate
         ctx.lineWidth = width
         ctx.strokeStyle = color
         ctx.fillStyle = fill
@@ -340,13 +348,13 @@ export class MyElement extends LitElement {
       let dx = 0
       let dy = 0
       for (const p in point) {
-        const { x, y } = point[p]
+        const { x, y } = point[p as keyof Point] as Coordinate
         const { x: mouseX, y: mouseY } = e
         dx = x - mouseX
         dy = y - mouseY
 
         if (dx * dx + dy * dy < radius * radius) {
-          drag = p
+          drag = p as keyof Point
           dPoint = e
           canvas.style.cursor = 'move'
           return
@@ -356,10 +364,17 @@ export class MyElement extends LitElement {
 
     // dragging in progress
     function dragging(event: MouseEvent) {
+      const e = MousePos(event)
       if (drag) {
-        const e = MousePos(event)
-        point[drag].x += e.x - dPoint.x
-        point[drag].y += e.y - dPoint.y
+        const currentPoint = point[drag]
+        console.log('dr', drag, currentPoint)
+        if (currentPoint?.x) {
+          currentPoint.x += e.x - dPoint.x
+        }
+        if (currentPoint?.y) {
+          currentPoint.y += e.y - dPoint.y
+        }
+
         dPoint = e
 
         drawScreen()
@@ -378,12 +393,12 @@ export class MyElement extends LitElement {
   }
 
   private _draw() {
-    const { _canvas, border, quadrants } = this
+    const { _canvas, border, quadrants, borderWidth, width, height } = this
     const canvas = _canvas as HTMLCanvasElement
-    canvas.height = 400
-    canvas.width = 400
+    canvas.height = height
+    canvas.width = width
     const ctx = canvas.getContext('2d') as CanvasRenderingContext2D
-    const graph = new Graph({ ctx, radius: canvas.width / 2 })
+    const graph = new Graph({ ctx, radius: width / 2, borderWidth })
 
 
     graph.baseGraph()
