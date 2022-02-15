@@ -1,4 +1,4 @@
-import { Colors, Props } from "./types"
+import { Colors, Props, Point } from "./types"
 import { QUADRANT_LABELS } from "./util/constants"
 
 export class Graph {
@@ -95,21 +95,48 @@ export class Graph {
     ctx.restore()
   }
 
-  drawQuadrants(quadrants = QUADRANT_LABELS) {
-    const { colors } = this
-    for (let i = 0; i < Object.values(colors).length; i++) {
-      if (quadrants.includes(QUADRANT_LABELS[i])) {
-        // need offset so drawing starts from top left 
-        // quadrant, or 'D' style quadrant
-        const quadrant = QUADRANT_LABELS[i] as keyof Colors
-        const currentColor = colors[quadrant]
-        const angleOffset = i + 2
-        const startAngle = (angleOffset * Math.PI) / 2
-        const endAngle = startAngle + Math.PI / 2
-        const emphasis = QUADRANT_LABELS.length - quadrants.length
-        this.drawQuadrant(emphasis, startAngle, endAngle, currentColor, currentColor)
+  drawQuadrants(quadrants = QUADRANT_LABELS, stylePath?: Point) {
+    const { colors, ctx } = this
+
+    const _draw = () => {
+      for (let i = 0; i < Object.values(colors).length; i++) {
+        if (quadrants.includes(QUADRANT_LABELS[i])) {
+          // need offset so drawing starts from top left 
+          // quadrant, or 'D' style quadrant
+          const quadrant = QUADRANT_LABELS[i] as keyof Colors
+          const currentColor = colors[quadrant]
+          const angleOffset = i + 2
+          const startAngle = (angleOffset * Math.PI) / 2
+          const endAngle = startAngle + Math.PI / 2
+          const emphasis = QUADRANT_LABELS.length - quadrants.length
+          this.drawQuadrant(emphasis, startAngle, endAngle, currentColor, currentColor)
+        }
       }
     }
+    if (stylePath) {
+      const { p1, cp1, cp2, p2 } = stylePath
+      ctx.save()
+      ctx.beginPath()
+      ctx.moveTo(p1.x, p1.y)
+      if (cp2) {
+        ctx.bezierCurveTo(cp1.x, cp1.y, cp2.x, cp2.y, p2.x, p2.y)
+        ctx.moveTo(p2.x, p2.y)
+        ctx.bezierCurveTo(cp2.x, cp2.y + this.height, cp1.x, cp1.y + this.height, p1.x, p1.y)
+
+      } else {
+        ctx.quadraticCurveTo(cp1.x, cp1.y, p2.x, p2.y)
+        ctx.moveTo(p2.x, p2.y)
+        ctx.quadraticCurveTo(cp1.x, cp1.y + this.height, p1.x, p1.y)
+      }
+      ctx.closePath()
+      ctx.clip()
+      _draw()
+      ctx.restore()
+    } else {
+      _draw()
+    }
+
+
   }
 
   drawQuadrant(

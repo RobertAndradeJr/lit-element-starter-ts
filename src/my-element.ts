@@ -5,7 +5,7 @@
  */
 
 import { LitElement, html, css } from 'lit'
-import { customElement, property, query } from 'lit/decorators.js'
+import { customElement, property, query, state } from 'lit/decorators.js'
 import { Graph } from './graph'
 import { Point, Coordinate } from './types'
 import { booleanColorConverter, quadrantConverter } from './util/func'
@@ -105,8 +105,16 @@ export class MyElement extends LitElement {
   /**
    * The name to say "Hello" to.
    */
-  @property()
-  name = 'World';
+  @state()
+  stylePath?: Point | undefined;
+
+  @state()
+  save = false
+
+  @property({
+    type: Boolean
+  })
+  edit = false
 
   /**
    * Width of borders
@@ -159,29 +167,46 @@ export class MyElement extends LitElement {
   quadrants = ['D', 'i', 'S', 'C']
 
   override render() {
+    const editControls = this.edit ? html`
+    <pre id="code">code</pre>
+    <div class="input">
+      <span>cubic</span>
+      <label class="switch">
+        <input @click="${this._toggle}" type="checkbox" />
+        <span class="slider round"></span>
+      </label>
+      <span>quadratic</span>
+      <br>
+      <button @click="${this.save ? this._deleteArc : this._saveArc}">${this.save ? 'Delete' : 'Save'} Arc</button>
+    </div>
+    ` : undefined
     return html`
       <canvas id="canvas">Fallback Content</canvas>
-      <pre id="code">code</pre>
-      <div class="input">
-        <span>cubic</span>
-        <label class="switch">
-          <input @click="${this._toggle}" type="checkbox" />
-          <span class="slider round"></span>
-        </label>
-        <span>quadratic</span>
-      </div>
+      ${editControls}
       <slot></slot>
     `
   }
 
   private _toggle() {
     this.quadratic = !this.quadratic
+    this.save = false
+    this.stylePath = undefined
+    this._canvasApp()
+  }
+
+  private _saveArc() {
+    this.save = true
+    this._canvasApp()
+  }
+
+  private _deleteArc() {
+    this.save = false
     this._canvasApp()
   }
 
   private _canvasApp() {
     // const drawCanvas = this._draw.bind(this)
-    const { width, height } = this
+    const { width, height, save } = this
     const canvas = this._canvas as HTMLCanvasElement
     canvas.width = width
     canvas.height = height || width
@@ -222,6 +247,7 @@ export class MyElement extends LitElement {
       cpline: {
         width: 2.5,
         color: '#BADA55',
+        fill: 'orange'
       },
       point: {
         radius: 10,
@@ -263,6 +289,7 @@ export class MyElement extends LitElement {
       // control lines
       ctx.lineWidth = cpline.width
       ctx.strokeStyle = cpline.color
+      ctx.fillStyle = cpline.fill
 
       ctx.beginPath()
       ctx.moveTo(p1.x, p1.y)
@@ -279,7 +306,6 @@ export class MyElement extends LitElement {
       // curve
       ctx.lineWidth = curve.width
       ctx.strokeStyle = curve.color
-
       ctx.beginPath()
       ctx.moveTo(p1.x, p1.y)
       if (cp2) {
@@ -287,6 +313,9 @@ export class MyElement extends LitElement {
       } else {
         ctx.quadraticCurveTo(cp1.x, cp1.y, p2.x, p2.y)
       }
+
+
+      // this.stylePath = point
       ctx.stroke()
 
       // control points
@@ -367,7 +396,6 @@ export class MyElement extends LitElement {
       const e = MousePos(event)
       if (drag) {
         const currentPoint = point[drag]
-        console.log('dr', drag, currentPoint)
         if (currentPoint?.x) {
           currentPoint.x += e.x - dPoint.x
         }
@@ -382,10 +410,17 @@ export class MyElement extends LitElement {
     }
 
     // stop dragging
-    function dragEnd() {
+    const dragEnd = () => {
       drag = null
       canvas.style.cursor = 'default'
       drawScreen()
+    }
+
+    if (save) {
+      this.stylePath = point
+    } else {
+      this.stylePath = undefined
+      this.save = false
     }
 
     drawScreen()
@@ -393,7 +428,7 @@ export class MyElement extends LitElement {
   }
 
   private _draw() {
-    const { _canvas, border, quadrants, borderWidth, width, height } = this
+    const { _canvas, border, quadrants, borderWidth, width, height, stylePath } = this
     const canvas = _canvas as HTMLCanvasElement
     canvas.width = width
     canvas.height = height || width
@@ -402,7 +437,7 @@ export class MyElement extends LitElement {
 
     graph.baseGraph()
 
-    graph.drawQuadrants(quadrants)
+    graph.drawQuadrants(quadrants, stylePath)
 
     graph.internalBorderHorizontal()
 
@@ -416,7 +451,13 @@ export class MyElement extends LitElement {
   protected override firstUpdated(
     _changedProperties: Map<string | number | symbol, unknown>
   ): void {
-    this._canvasApp()
+    const { edit } = this
+    if (edit) {
+      this._canvasApp()
+
+    } else {
+      this._draw()
+    }
   }
 }
 
