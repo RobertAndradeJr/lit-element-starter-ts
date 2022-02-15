@@ -98,22 +98,7 @@ export class Graph {
   drawQuadrants(quadrants = QUADRANT_LABELS, stylePath?: Point) {
     const { colors, ctx } = this
 
-    const _draw = () => {
-      for (let i = 0; i < Object.values(colors).length; i++) {
-        if (quadrants.includes(QUADRANT_LABELS[i])) {
-          // need offset so drawing starts from top left 
-          // quadrant, or 'D' style quadrant
-          const quadrant = QUADRANT_LABELS[i] as keyof Colors
-          const currentColor = colors[quadrant]
-          const angleOffset = i + 2
-          const startAngle = (angleOffset * Math.PI) / 2
-          const endAngle = startAngle + Math.PI / 2
-          const emphasis = QUADRANT_LABELS.length - quadrants.length
-          this.drawQuadrant(emphasis, startAngle, endAngle, currentColor, currentColor)
-        }
-      }
-    }
-    if (stylePath) {
+    const _clip = (stylePath: Point) => {
       const { p1, cp1, cp2, p2 } = stylePath
       ctx.save()
       ctx.beginPath()
@@ -132,11 +117,29 @@ export class Graph {
       ctx.clip()
       _draw()
       ctx.restore()
+    }
+
+    const _draw = () => {
+      for (let i = 0; i < Object.values(colors).length; i++) {
+        if (quadrants.includes(QUADRANT_LABELS[i])) {
+          // need offset so drawing starts from top left 
+          // quadrant, or 'D' style quadrant
+          const quadrant = QUADRANT_LABELS[i] as keyof Colors
+          const currentColor = colors[quadrant]
+          const angleOffset = i + 2
+          const startAngle = (angleOffset * Math.PI) / 2
+          const endAngle = startAngle + Math.PI / 2
+          const emphasis = QUADRANT_LABELS.length - quadrants.length
+          this.drawQuadrant(emphasis, startAngle, endAngle, currentColor, currentColor)
+        }
+      }
+    }
+
+    if (stylePath) {
+      _clip(stylePath)
     } else {
       _draw()
     }
-
-
   }
 
   drawQuadrant(
