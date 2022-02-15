@@ -16,7 +16,7 @@ export class Graph {
   constructor({
     radius = 50,
     ctx = new CanvasRenderingContext2D,
-    borderWidth = 5,
+    borderWidth = radius / 100,
     colors = {
       D: `rgba(0,149,59,1)`,
       i: `rgba(199,50,58,1)`,
@@ -120,7 +120,6 @@ export class Graph {
     stroke = '#fff'
   ) {
     const { cx, cy, mapRadius: radius, ctx } = this
-
     ctx.beginPath()
     ctx.moveTo(cx, cy)
     ctx.arc(cx, cy, radius + emphasis, startAngle, endAngle)
