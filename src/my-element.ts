@@ -114,7 +114,7 @@ export class MyElement extends LitElement {
   @property({
     type: Number
   })
-  borderWidth = 5;
+  borderWidth?: number;
 
   /**
    * Width of element
@@ -130,7 +130,7 @@ export class MyElement extends LitElement {
   @property({
     type: Number
   })
-  height = 100;
+  height?: number;
 
   /**
    * qubic or quadratic arc
@@ -183,8 +183,8 @@ export class MyElement extends LitElement {
     // const drawCanvas = this._draw.bind(this)
     const { width, height } = this
     const canvas = this._canvas as HTMLCanvasElement
-    canvas.height = height
     canvas.width = width
+    canvas.height = height || width
     const ctx = canvas.getContext('2d') as CanvasRenderingContext2D
 
     const point: Point = {
@@ -395,11 +395,10 @@ export class MyElement extends LitElement {
   private _draw() {
     const { _canvas, border, quadrants, borderWidth, width, height } = this
     const canvas = _canvas as HTMLCanvasElement
-    canvas.height = height
     canvas.width = width
+    canvas.height = height || width
     const ctx = canvas.getContext('2d') as CanvasRenderingContext2D
     const graph = new Graph({ ctx, radius: width / 2, borderWidth })
-
 
     graph.baseGraph()
 
