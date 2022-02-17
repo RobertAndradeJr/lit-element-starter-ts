@@ -1,5 +1,5 @@
 import { Colors, Props, Point } from "./types"
-import { QUADRANT_LABELS } from "./util/constants"
+import { FONT_STACK, QUADRANT_COLORS, QUADRANT_LABELS } from "./util/constants"
 
 export class Graph {
   height: number
@@ -17,12 +17,7 @@ export class Graph {
     radius = 50,
     ctx = new CanvasRenderingContext2D,
     borderWidth = radius / 100,
-    colors = {
-      D: `#009e3d`,
-      i: `#cd3741`,
-      S: `#00a0d1`,
-      C: `#f3cc23`,
-    }
+    colors = QUADRANT_COLORS
   }: Props) {
     this.colors = colors
     this.height = radius * 2
@@ -45,19 +40,20 @@ export class Graph {
 
   baseGraph() {
     const { cx, cy, mapRadius: radius, ctx } = this
+    const { base } = QUADRANT_COLORS
     ctx.save()
     ctx.moveTo(cx, cy)
     ctx.beginPath()
     ctx.arc(cx, cy, radius, 0, Math.PI * 2)
-    ctx.fillStyle = '#d9d8d6'
-    ctx.strokeStyle = 'rgba(128,128,128,0.15)'
+    ctx.fillStyle = base
+    ctx.strokeStyle = base
     ctx.closePath()
     ctx.fill()
     ctx.stroke()
     ctx.restore()
   }
 
-  drawDashedBorder(border = '#949494') {
+  drawDashedBorder(border = QUADRANT_COLORS.border) {
     const { cx, cy, borderRadius: radius, ctx, borderWidth } = this
     this.ctx.lineWidth = borderWidth
     ctx.save()
@@ -73,9 +69,10 @@ export class Graph {
 
   drawInternalBorder(direction: 'vertical' | 'horizontal') {
     const { height, width, ctx, borderRadius, mapRadius } = this
-    const padding = borderRadius - mapRadius
+    const padding = (borderRadius - mapRadius) / 2
     ctx.lineWidth = this.borderWidth * 3
     ctx.strokeStyle = 'white'
+    console.log('p', padding)
     ctx.save()
     ctx.beginPath()
     if (direction === 'vertical') {
@@ -91,9 +88,10 @@ export class Graph {
 
   drawLabels() {
     const { height, width, ctx } = this
+    const { textColor } = QUADRANT_COLORS
     ctx.save()
-    ctx.font = `${width / 6}px Roboto, -apple-system, BlinkMacSystemFont, avenir next, avenir, segoe ui, helvetica neue, helvetica, Ubuntu, roboto, noto, arial, sans-serif, Gadget, sans-serif`
-    ctx.fillStyle = 'white'
+    ctx.font = `${width / 6}px ${FONT_STACK}`
+    ctx.fillStyle = textColor
     ctx.textBaseline = 'middle'
     ctx.textAlign = 'center'
     ctx.fillText('D', width * 1 / 3, height * 1 / 3)
@@ -155,8 +153,8 @@ export class Graph {
     emphasis = 0,
     startAngle = 0,
     endAngle = Math.PI / 2,
-    fill = '#000',
-    stroke = '#fff'
+    fill = QUADRANT_COLORS.base,
+    stroke = QUADRANT_COLORS.base
   ) {
     const { cx, cy, mapRadius: radius, ctx } = this
     ctx.beginPath()
