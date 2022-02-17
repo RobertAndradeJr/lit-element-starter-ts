@@ -5,7 +5,9 @@
  */
 
 import { LitElement, html, css } from 'lit'
-import { customElement, property, query, state } from 'lit/decorators.js'
+import { customElement, property, state } from 'lit/decorators.js'
+import { ref, createRef } from 'lit/directives/ref.js'
+
 import { Graph } from './graph'
 import { Point, Coordinate } from './types'
 import { booleanColorConverter, quadrantConverter } from './util/func'
@@ -21,11 +23,8 @@ import { booleanColorConverter, quadrantConverter } from './util/func'
  */
 @customElement('my-element')
 export class MyElement extends LitElement {
-  @query('#canvas')
-  _canvas!: HTMLCanvasElement | null;
-
-  @query('#code')
-  _code!: HTMLPreElement | null;
+  _canvas = createRef<HTMLCanvasElement>()
+  _code = createRef<HTMLPreElement>();
 
   static override styles = css`
     :host {
@@ -168,7 +167,7 @@ export class MyElement extends LitElement {
 
   override render() {
     const editControls = this.edit ? html`
-    <pre id="code">code</pre>
+    <pre ${ref(this._code)}>code</pre>
     <div class="input">
       <span>cubic</span>
       <label class="switch">
@@ -181,7 +180,7 @@ export class MyElement extends LitElement {
     </div>
     ` : undefined
     return html`
-      <canvas id="canvas">Fallback Content</canvas>
+      <canvas ${ref(this._canvas)}>Fallback Content</canvas>
       ${editControls}
       <slot></slot>
     `
@@ -207,7 +206,7 @@ export class MyElement extends LitElement {
   private _canvasApp() {
     // const drawCanvas = this._draw.bind(this)
     const { width, height, save } = this
-    const canvas = this._canvas as HTMLCanvasElement
+    const canvas = this._canvas.value as HTMLCanvasElement
     canvas.width = width
     canvas.height = height || width
     const ctx = canvas.getContext('2d') as CanvasRenderingContext2D
@@ -335,7 +334,7 @@ export class MyElement extends LitElement {
 
     // format string for code
     const showCode = () => {
-      const { firstChild } = this._code as HTMLPreElement
+      const { firstChild } = this._code.value as HTMLPreElement
       const {
         curve: { width, color },
       } = style
@@ -428,8 +427,8 @@ export class MyElement extends LitElement {
   }
 
   private _draw() {
-    const { _canvas, border, quadrants, borderWidth, width, height, stylePath } = this
-    const canvas = _canvas as HTMLCanvasElement
+    const { border, quadrants, borderWidth, width, height, stylePath } = this
+    const canvas = this._canvas.value as HTMLCanvasElement
     canvas.width = width
     canvas.height = height || width
     const ctx = canvas.getContext('2d') as CanvasRenderingContext2D
@@ -437,15 +436,17 @@ export class MyElement extends LitElement {
 
     graph.baseGraph()
 
+    if (border) {
+      graph.drawDashedBorder(border)
+    }
+
     graph.drawQuadrants(quadrants, stylePath)
 
-    graph.internalBorderHorizontal()
+    graph.drawInternalBorder('horizontal')
 
-    graph.internalBorderVertical()
+    graph.drawInternalBorder('vertical')
 
-    if (border) {
-      graph.dashBorder(border)
-    }
+    graph.drawLabels()
   }
 
   protected override firstUpdated(
