@@ -18,10 +18,10 @@ export class Graph {
     ctx = new CanvasRenderingContext2D,
     borderWidth = radius / 100,
     colors = {
-      D: `rgba(0,149,59,1)`,
-      i: `rgba(199,50,58,1)`,
-      S: `rgba(0,148,201,1)`,
-      C: `rgba(241,200,49,1)`,
+      D: `#009e3d`,
+      i: `#cd3741`,
+      S: `#00a0d1`,
+      C: `#f3cc23`,
     }
   }: Props) {
     this.colors = colors
@@ -49,7 +49,7 @@ export class Graph {
     ctx.moveTo(cx, cy)
     ctx.beginPath()
     ctx.arc(cx, cy, radius, 0, Math.PI * 2)
-    ctx.fillStyle = 'rgba(128,128,128,1)'
+    ctx.fillStyle = '#d9d8d6'
     ctx.strokeStyle = 'rgba(128,128,128,0.15)'
     ctx.closePath()
     ctx.fill()
@@ -57,7 +57,7 @@ export class Graph {
     ctx.restore()
   }
 
-  drawDashedBorder(border = '#000') {
+  drawDashedBorder(border = '#949494') {
     const { cx, cy, borderRadius: radius, ctx, borderWidth } = this
     this.ctx.lineWidth = borderWidth
     ctx.save()
@@ -72,17 +72,18 @@ export class Graph {
   }
 
   drawInternalBorder(direction: 'vertical' | 'horizontal') {
-    const { height, width, ctx } = this
+    const { height, width, ctx, borderRadius, mapRadius } = this
+    const padding = borderRadius - mapRadius
     ctx.lineWidth = this.borderWidth * 3
     ctx.strokeStyle = 'white'
     ctx.save()
     ctx.beginPath()
     if (direction === 'vertical') {
-      ctx.moveTo(width / 2, 0)
-      ctx.lineTo(width / 2, height)
+      ctx.moveTo(width / 2, padding)
+      ctx.lineTo(width / 2, height - padding)
     } else if (direction === 'horizontal') {
-      ctx.moveTo(0, height / 2)
-      ctx.lineTo(width, height / 2)
+      ctx.moveTo(padding, height / 2)
+      ctx.lineTo(width - padding, height / 2)
     }
     ctx.stroke()
     ctx.restore()
