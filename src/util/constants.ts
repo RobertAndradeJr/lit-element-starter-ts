@@ -1,0 +1,1 @@
+export const QUADRANT_LABELS: string[] = ['D', 'i', 'S', 'C']

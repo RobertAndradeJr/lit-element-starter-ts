@@ -5,19 +5,11 @@
  */
 
 import { LitElement, html, css } from 'lit'
-import { customElement, property, query } from 'lit/decorators.js'
+import { customElement, property, query, state } from 'lit/decorators.js'
+import { Graph } from './graph'
+import { Point, Coordinate } from './types'
+import { booleanColorConverter, quadrantConverter } from './util/func'
 
-interface Coordinate {
-  x: number,
-  y: number
-}
-
-interface Point {
-  [key: string]: Coordinate,
-  p1: Coordinate,
-  p2: Coordinate,
-  cp1: Coordinate
-}
 
 
 /**
@@ -30,14 +22,10 @@ interface Point {
 @customElement('my-element')
 export class MyElement extends LitElement {
   @query('#canvas')
-  _canvas!: HTMLCanvasElement | null
+  _canvas!: HTMLCanvasElement | null;
 
   @query('#code')
-  _code!: HTMLPreElement | null
-
-  @property({ type: Boolean })
-  quadratic = false
-
+  _code!: HTMLPreElement | null;
 
   static override styles = css`
     :host {
@@ -48,7 +36,6 @@ export class MyElement extends LitElement {
     }
 
     #canvas {
-      border: 4px dashed black;
       border-radius: 50%;
     }
     /* The switch - the box around the slider */
@@ -75,28 +62,28 @@ export class MyElement extends LitElement {
       right: 0;
       bottom: 0;
       background-color: #ccc;
-      -webkit-transition: .4s;
-      transition: .4s;
+      -webkit-transition: 0.4s;
+      transition: 0.4s;
     }
 
     .slider:before {
       position: absolute;
-      content: "";
+      content: '';
       height: 26px;
       width: 26px;
       left: 4px;
       bottom: 4px;
       background-color: white;
-      -webkit-transition: .4s;
-      transition: .4s;
+      -webkit-transition: 0.4s;
+      transition: 0.4s;
     }
 
     input:checked + .slider {
-      background-color: #2196F3;
+      background-color: #2196f3;
     }
 
     input:focus + .slider {
-      box-shadow: 0 0 1px #2196F3;
+      box-shadow: 0 0 1px #2196f3;
     }
 
     input:checked + .slider:before {
@@ -118,68 +105,136 @@ export class MyElement extends LitElement {
   /**
    * The name to say "Hello" to.
    */
-  @property()
-  name = 'World'
+  @state()
+  stylePath?: Point | undefined;
+
+  @state()
+  save = false
+
+  @property({
+    type: Boolean
+  })
+  edit = false
 
   /**
    * Width of borders
    */
-  @property({ type: Number })
-  borderWidth = 10
+  @property({
+    type: Number
+  })
+  borderWidth?: number;
+
+  /**
+   * Width of element
+   */
+  @property({
+    type: Number
+  })
+  width = 100;
+
+  /**
+   * Height of element
+   */
+  @property({
+    type: Number
+  })
+  height?: number;
+
+  /**
+   * qubic or quadratic arc
+   */
+  @property({ type: Boolean })
+  quadratic = false;
+
+  /**
+   * border color
+   */
+  @property({
+    type: String,
+    converter: booleanColorConverter
+  })
+  border?: string;
+
+  /**
+   * 
+   * Which quadrants are emphasized
+   * if any
+   */
+  @property({
+    type: Array,
+    converter: quadrantConverter
+  })
+  quadrants = ['D', 'i', 'S', 'C']
 
   override render() {
+    const editControls = this.edit ? html`
+    <pre id="code">code</pre>
+    <div class="input">
+      <span>cubic</span>
+      <label class="switch">
+        <input @click="${this._toggle}" type="checkbox" />
+        <span class="slider round"></span>
+      </label>
+      <span>quadratic</span>
+      <br>
+      <button @click="${this.save ? this._deleteArc : this._saveArc}">${this.save ? 'Delete' : 'Save'} Arc</button>
+    </div>
+    ` : undefined
     return html`
       <canvas id="canvas">Fallback Content</canvas>
-      <pre id="code">code</pre>
-      <div class="input">
-        <span>cubic</span>
-        <label class="switch">
-          <input @click="${this._toggle}" type="checkbox">
-          <span class="slider round"></span>
-      </label>
-          <span>quadratic</span>
-      </div>
+      ${editControls}
       <slot></slot>
     `
   }
 
   private _toggle() {
-    console.log('togg', this.quadratic)
     this.quadratic = !this.quadratic
+    this.save = false
+    this.stylePath = undefined
     this._canvasApp()
-    // this.requestUpdate('_quadratic', this._quadratic)
+  }
+
+  private _saveArc() {
+    this.save = true
+    this._canvasApp()
+  }
+
+  private _deleteArc() {
+    this.save = false
+    this._canvasApp()
   }
 
   private _canvasApp() {
     // const drawCanvas = this._draw.bind(this)
+    const { width, height, save } = this
     const canvas = this._canvas as HTMLCanvasElement
-    canvas.height = 400
-    canvas.width = 400
-    const ctx = canvas.getContext("2d") as CanvasRenderingContext2D
+    canvas.width = width
+    canvas.height = height || width
+    const ctx = canvas.getContext('2d') as CanvasRenderingContext2D
 
     const point: Point = {
       p1: {
         x: 100,
-        y: 350
+        y: 350,
       },
       p2: {
         x: 300,
-        y: 350
+        y: 350,
       },
       cp1: {
         x: 200,
-        y: 100
-      }
+        y: 100,
+      },
     }
 
     if (!this.quadratic) {
       point.cp1 = {
         x: 100,
-        y: 100
+        y: 100,
       }
       point.cp2 = {
         x: 300,
-        y: 100
+        y: 100,
       }
     }
 
@@ -187,43 +242,45 @@ export class MyElement extends LitElement {
     const style = {
       curve: {
         width: 6,
-        color: "#000"
+        color: '#000',
       },
       cpline: {
         width: 2.5,
-        color: "#BADA55"
+        color: '#BADA55',
+        fill: 'orange'
       },
       point: {
         radius: 10,
         width: 2,
-        color: "#900",
-        fill: "rgba(200, 200, 200, .5)",
+        color: '#900',
+        fill: 'rgba(200, 200, 200, .5)',
         arc1: 0,
-        arc2: 2 * Math.PI
-      }
+        arc2: 2 * Math.PI,
+      },
     }
-    let drag: string | null = null
+    let drag: keyof Point | null = null
     let dPoint: Coordinate = { x: 0, y: 0 }
 
     // define initial points
     const init = () => {
-
       // line style defaults
-      ctx.lineCap = "round"
-      ctx.lineJoin = "round"
+      ctx.lineCap = 'round'
+      ctx.lineJoin = 'round'
 
       //event handles
-      canvas.addEventListener("mousedown", dragStart, false)
-      canvas.addEventListener("mousemove", dragging, false)
-      canvas.addEventListener("mouseup", dragEnd, false)
-      canvas.addEventListener("mouseout", dragEnd, false)
+      canvas.addEventListener('mousedown', dragStart, false)
+      canvas.addEventListener('mousemove', dragging, false)
+      canvas.addEventListener('mouseup', dragEnd, false)
+      canvas.addEventListener('mouseout', dragEnd, false)
 
       drawScreen()
     }
 
     // draw screen
     const drawScreen = () => {
-      const { point: { width, color, fill, radius, arc1, arc2 } } = style
+      const {
+        point: { width, color, fill, radius, arc1, arc2 },
+      } = style
       const { p1, p2, cp1, cp2 } = point
       const { cpline, curve } = style
       ctx.clearRect(0, 0, canvas.width, canvas.height)
@@ -232,12 +289,13 @@ export class MyElement extends LitElement {
       // control lines
       ctx.lineWidth = cpline.width
       ctx.strokeStyle = cpline.color
+      ctx.fillStyle = cpline.fill
 
       ctx.beginPath()
       ctx.moveTo(p1.x, p1.y)
       ctx.lineTo(cp1.x, cp1.y)
 
-      if (point.cp2) {
+      if (cp2) {
         ctx.moveTo(p2.x, p2.y)
         ctx.lineTo(cp2.x, cp2.y)
       } else {
@@ -248,43 +306,26 @@ export class MyElement extends LitElement {
       // curve
       ctx.lineWidth = curve.width
       ctx.strokeStyle = curve.color
-
       ctx.beginPath()
       ctx.moveTo(p1.x, p1.y)
       if (cp2) {
-        ctx.bezierCurveTo(
-          cp1.x,
-          cp1.y,
-          cp2.x,
-          cp2.y,
-          p2.x,
-          p2.y
-        )
+        ctx.bezierCurveTo(cp1.x, cp1.y, cp2.x, cp2.y, p2.x, p2.y)
       } else {
-        ctx.quadraticCurveTo(
-          cp1.x,
-          cp1.y,
-          p2.x,
-          p2.y
-        )
+        ctx.quadraticCurveTo(cp1.x, cp1.y, p2.x, p2.y)
       }
+
+
+      // this.stylePath = point
       ctx.stroke()
 
       // control points
       for (const p in point) {
-        const { x, y } = point[p]
+        const { x, y } = point[p as keyof Point] as Coordinate
         ctx.lineWidth = width
         ctx.strokeStyle = color
         ctx.fillStyle = fill
         ctx.beginPath()
-        ctx.arc(
-          x,
-          y,
-          radius,
-          arc1,
-          arc2,
-          true
-        )
+        ctx.arc(x, y, radius, arc1, arc2, true)
         ctx.fill()
         ctx.stroke()
       }
@@ -295,7 +336,9 @@ export class MyElement extends LitElement {
     // format string for code
     const showCode = () => {
       const { firstChild } = this._code as HTMLPreElement
-      const { curve: { width, color } } = style
+      const {
+        curve: { width, color },
+      } = style
       const { p1, cp1, cp2, p2 } = point
       if (firstChild) {
         firstChild.nodeValue = `
@@ -305,9 +348,9 @@ export class MyElement extends LitElement {
         ctx.strokeStyle = "${color}"
         ctx.beginPath()
         ctx.moveTo(${p1.x}, ${p1.y})
-        ${cp2 ?
-          `ctx.bezierCurveTo(${cp1.x}, ${cp1.y}, ${cp2.x}, ${cp2.y}, ${p2.x}, ${p2.y})` :
-          `ctx.quadraticCurveTo(${cp1.x}, ${cp1.y}, ${p2.x}, ${p2.y})`
+        ${cp2
+            ? `ctx.bezierCurveTo(${cp1.x}, ${cp1.y}, ${cp2.x}, ${cp2.y}, ${p2.x}, ${p2.y})`
+            : `ctx.quadraticCurveTo(${cp1.x}, ${cp1.y}, ${p2.x}, ${p2.y})`
           }
         ctx.stroke()
         `
@@ -320,27 +363,29 @@ export class MyElement extends LitElement {
       const { offsetLeft, offsetTop } = canvas
       return {
         x: pageX - offsetLeft,
-        y: pageY - offsetTop
+        y: pageY - offsetTop,
       }
     }
 
     // start dragging
     const dragStart = (event: MouseEvent) => {
       const e = MousePos(event)
-      const { point: { radius } } = style
+      const {
+        point: { radius },
+      } = style
 
       let dx = 0
       let dy = 0
       for (const p in point) {
-        const { x, y } = point[p]
+        const { x, y } = point[p as keyof Point] as Coordinate
         const { x: mouseX, y: mouseY } = e
         dx = x - mouseX
         dy = y - mouseY
 
         if (dx * dx + dy * dy < radius * radius) {
-          drag = p
+          drag = p as keyof Point
           dPoint = e
-          canvas.style.cursor = "move"
+          canvas.style.cursor = 'move'
           return
         }
       }
@@ -348,10 +393,16 @@ export class MyElement extends LitElement {
 
     // dragging in progress
     function dragging(event: MouseEvent) {
+      const e = MousePos(event)
       if (drag) {
-        const e = MousePos(event)
-        point[drag].x += e.x - dPoint.x
-        point[drag].y += e.y - dPoint.y
+        const currentPoint = point[drag]
+        if (currentPoint?.x) {
+          currentPoint.x += e.x - dPoint.x
+        }
+        if (currentPoint?.y) {
+          currentPoint.y += e.y - dPoint.y
+        }
+
         dPoint = e
 
         drawScreen()
@@ -359,10 +410,17 @@ export class MyElement extends LitElement {
     }
 
     // stop dragging
-    function dragEnd() {
+    const dragEnd = () => {
       drag = null
-      canvas.style.cursor = "default"
+      canvas.style.cursor = 'default'
       drawScreen()
+    }
+
+    if (save) {
+      this.stylePath = point
+    } else {
+      this.stylePath = undefined
+      this.save = false
     }
 
     drawScreen()
@@ -370,38 +428,41 @@ export class MyElement extends LitElement {
   }
 
   private _draw() {
-    const { _canvas, borderWidth } = this
+    const { _canvas, border, quadrants, borderWidth, width, height, stylePath } = this
     const canvas = _canvas as HTMLCanvasElement
-    canvas.height = 400
-    canvas.width = 400
+    canvas.width = width
+    canvas.height = height || width
     const ctx = canvas.getContext('2d') as CanvasRenderingContext2D
-    const cx = 200
-    const cy = 200
-    const radius = 200
-    const colors = ['rgb(0,148,201)', 'rgb(241,200,49)', 'rgb(0,149,59)', 'rgb(199,50,58)']
+    const graph = new Graph({ ctx, radius: width / 2, borderWidth })
 
-    for (let i = 0; i < colors.length; i++) {
-      const startAngle = i * Math.PI / 2
-      const endAngle = startAngle + Math.PI / 2
-      ctx.beginPath()
-      ctx.moveTo(cx, cy)
-      ctx.arc(cx, cy, radius, startAngle, endAngle)
-      ctx.closePath()
-      ctx.fillStyle = colors[i]
-      ctx.strokeStyle = 'white'
-      ctx.lineWidth = borderWidth
-      ctx.fill()
-      ctx.stroke()
+    graph.baseGraph()
+
+    graph.drawQuadrants(quadrants, stylePath)
+
+    graph.internalBorderHorizontal()
+
+    graph.internalBorderVertical()
+
+    if (border) {
+      graph.dashBorder(border)
     }
   }
 
-  protected override firstUpdated(_changedProperties: Map<string | number | symbol, unknown>): void {
-    this._canvasApp()
+  protected override firstUpdated(
+    _changedProperties: Map<string | number | symbol, unknown>
+  ): void {
+    const { edit } = this
+    if (edit) {
+      this._canvasApp()
+
+    } else {
+      this._draw()
+    }
   }
 }
 
 declare global {
   interface HTMLElementTagNameMap {
-    'my-element': MyElement
+    'my-element': MyElement;
   }
 }
