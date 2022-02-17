@@ -57,42 +57,50 @@ export class Graph {
     ctx.restore()
   }
 
-  dashBorder(border = '#000') {
+  drawDashedBorder(border = '#000') {
     const { cx, cy, borderRadius: radius, ctx, borderWidth } = this
     this.ctx.lineWidth = borderWidth
     ctx.save()
+    ctx.setLineDash([borderWidth * 3, borderWidth * 3])
     ctx.moveTo(cx, cy)
     ctx.beginPath()
     ctx.arc(cx, cy, radius, 0, Math.PI * 2)
     ctx.strokeStyle = border
-    ctx.setLineDash([borderWidth * 3, borderWidth * 3])
     ctx.closePath()
     ctx.stroke()
     ctx.restore()
   }
 
-  internalBorderHorizontal() {
+  drawInternalBorder(direction: 'vertical' | 'horizontal') {
     const { height, width, ctx } = this
     ctx.lineWidth = this.borderWidth * 3
+    ctx.strokeStyle = 'white'
     ctx.save()
     ctx.beginPath()
-    ctx.moveTo(0, height / 2)
-    ctx.lineTo(width, height / 2)
-    ctx.strokeStyle = 'white'
+    if (direction === 'vertical') {
+      ctx.moveTo(width / 2, 0)
+      ctx.lineTo(width / 2, height)
+    } else if (direction === 'horizontal') {
+      ctx.moveTo(0, height / 2)
+      ctx.lineTo(width, height / 2)
+    }
     ctx.stroke()
     ctx.restore()
   }
 
-  internalBorderVertical() {
+  drawLabels() {
     const { height, width, ctx } = this
-    ctx.lineWidth = this.borderWidth * 3
     ctx.save()
-    ctx.beginPath()
-    ctx.moveTo(width / 2, 0)
-    ctx.lineTo(width / 2, height)
-    ctx.strokeStyle = 'white'
-    ctx.stroke()
+    ctx.font = `${width / 6}px Roboto, -apple-system, BlinkMacSystemFont, avenir next, avenir, segoe ui, helvetica neue, helvetica, Ubuntu, roboto, noto, arial, sans-serif, Gadget, sans-serif`
+    ctx.fillStyle = 'white'
+    ctx.textBaseline = 'middle'
+    ctx.textAlign = 'center'
+    ctx.fillText('D', width * 1 / 3, height * 1 / 3)
+    ctx.fillText('i', width * 2 / 3, height * 1 / 3)
+    ctx.fillText('S', width * 2 / 3, height * 2 / 3)
+    ctx.fillText('C', width * 1 / 3, height * 2 / 3)
     ctx.restore()
+
   }
 
   drawQuadrants(quadrants = QUADRANT_LABELS, stylePath?: Point) {
