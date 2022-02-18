@@ -8,5 +8,5 @@ export const QUADRANT_COLORS = {
   border: '#949494',
   textColor: '#ffffff'
 }
-export const QUADRANT_LABELS = Object.keys(QUADRANT_COLORS)
+export const QUADRANT_LABELS = ['D', 'i', 'S', 'C']
 export const FONT_STACK = 'Roboto, -apple-system, BlinkMacSystemFont, avenir next, avenir, segoe ui, helvetica neue, helvetica, Ubuntu, roboto, noto, arial, sans-serif, Gadget, sans-serif'
