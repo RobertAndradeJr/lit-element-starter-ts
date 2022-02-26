@@ -1,6 +1,6 @@
-import { QUADRANT_LABELS } from "./constants"
+import { QUADRANT_COLORS, QUADRANT_LABELS } from "./constants"
 
-export const booleanColorConverter = (value: string | null) => value ? String(value) : 'black'
+export const booleanColorConverter = (value: string | null) => value ? String(value) : QUADRANT_COLORS.border
 
 export const quadrantConverter = (value: string | null): string[] => {
   // if there is no value it all quadrants are showing

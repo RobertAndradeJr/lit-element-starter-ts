@@ -1,5 +1,5 @@
-import { Colors, Props, Point } from "./types"
-import { QUADRANT_LABELS } from "./util/constants"
+import { Colors, Props, Point, Coordinate } from "./types"
+import { FONT_STACK, QUADRANT_COLORS, QUADRANT_LABELS } from "./util/constants"
 
 export class Graph {
   height: number
@@ -16,13 +16,8 @@ export class Graph {
   constructor({
     radius = 50,
     ctx = new CanvasRenderingContext2D,
-    borderWidth = radius / 100,
-    colors = {
-      D: `rgba(0,149,59,1)`,
-      i: `rgba(199,50,58,1)`,
-      S: `rgba(0,148,201,1)`,
-      C: `rgba(241,200,49,1)`,
-    }
+    borderWidth = 4,
+    colors = QUADRANT_COLORS
   }: Props) {
     this.colors = colors
     this.height = radius * 2
@@ -31,9 +26,9 @@ export class Graph {
     this.ctx = ctx
     this.radius = this.width / 2
     // padding between circle and border
-    // removing 1 border width meets outer border
-    // then 2 border widths of padding
-    this.mapRadius = this.radius - (this.borderWidth * 8)
+    // removing 1 border width to be flush with outer border
+    // then 4 border widths of padding
+    this.mapRadius = this.radius - (this.borderWidth * 5)
     // half of border width to have full border in frame
     // since stroke is half inside half outside of line
     // and radius goes up to edge of box
@@ -45,54 +40,69 @@ export class Graph {
 
   baseGraph() {
     const { cx, cy, mapRadius: radius, ctx } = this
+    const { base } = QUADRANT_COLORS
     ctx.save()
     ctx.moveTo(cx, cy)
     ctx.beginPath()
     ctx.arc(cx, cy, radius, 0, Math.PI * 2)
-    ctx.fillStyle = 'rgba(128,128,128,1)'
-    ctx.strokeStyle = 'rgba(128,128,128,0.15)'
+    ctx.fillStyle = base
+    ctx.strokeStyle = base
     ctx.closePath()
     ctx.fill()
     ctx.stroke()
     ctx.restore()
   }
 
-  dashBorder(border = '#000') {
+  drawDashedBorder(border = QUADRANT_COLORS.border) {
     const { cx, cy, borderRadius: radius, ctx, borderWidth } = this
     this.ctx.lineWidth = borderWidth
+    console.log('border color', border, borderWidth * 2.25)
     ctx.save()
+    ctx.setLineDash([borderWidth * 2.25, borderWidth * 2.25])
     ctx.moveTo(cx, cy)
     ctx.beginPath()
     ctx.arc(cx, cy, radius, 0, Math.PI * 2)
     ctx.strokeStyle = border
-    ctx.setLineDash([borderWidth * 3, borderWidth * 3])
     ctx.closePath()
     ctx.stroke()
     ctx.restore()
   }
 
-  internalBorderHorizontal() {
-    const { height, width, ctx } = this
-    ctx.lineWidth = this.borderWidth * 3
+  drawInternalBorder(direction: 'vertical' | 'horizontal') {
+    const { height, width, ctx, borderRadius, mapRadius } = this
+    const padding = (borderRadius - mapRadius) / 2
+    ctx.lineWidth = this.borderWidth * 1.5
+    ctx.strokeStyle = 'white'
+    console.log('p', padding)
     ctx.save()
     ctx.beginPath()
-    ctx.moveTo(0, height / 2)
-    ctx.lineTo(width, height / 2)
-    ctx.strokeStyle = 'white'
+    if (direction === 'vertical') {
+      ctx.moveTo(width / 2, padding)
+      ctx.lineTo(width / 2, height - padding)
+    } else if (direction === 'horizontal') {
+      ctx.moveTo(padding, height / 2)
+      ctx.lineTo(width - padding, height / 2)
+    }
     ctx.stroke()
     ctx.restore()
   }
 
-  internalBorderVertical() {
+  drawLabels() {
     const { height, width, ctx } = this
-    ctx.lineWidth = this.borderWidth * 3
+    const { textColor } = QUADRANT_COLORS
     ctx.save()
-    ctx.beginPath()
-    ctx.moveTo(width / 2, 0)
-    ctx.lineTo(width / 2, height)
-    ctx.strokeStyle = 'white'
-    ctx.stroke()
+    console.log('font', width / 5.5)
+    ctx.font = `${width / 5.5}px ${FONT_STACK}`
+    ctx.fillStyle = textColor
+    ctx.textBaseline = 'middle'
+    ctx.textAlign = 'center'
+    ctx.imageSmoothingEnabled = false
+    ctx.fillText('D', width * 1 / 3, height * 1 / 3)
+    ctx.fillText('i', width * 2 / 3, height * 1 / 3)
+    ctx.fillText('S', width * 2 / 3, height * 17 / 24)
+    ctx.fillText('C', width * 1 / 3, height * 17 / 24)
     ctx.restore()
+
   }
 
   drawQuadrants(quadrants = QUADRANT_LABELS, stylePath?: Point) {
@@ -129,7 +139,7 @@ export class Graph {
           const angleOffset = i + 2
           const startAngle = (angleOffset * Math.PI) / 2
           const endAngle = startAngle + Math.PI / 2
-          const emphasis = QUADRANT_LABELS.length - quadrants.length
+          const emphasis = (QUADRANT_LABELS.length - quadrants.length) * 2
           this.drawQuadrant(emphasis, startAngle, endAngle, currentColor, currentColor)
         }
       }
@@ -146,13 +156,32 @@ export class Graph {
     emphasis = 0,
     startAngle = 0,
     endAngle = Math.PI / 2,
-    fill = '#000',
-    stroke = '#fff'
+    fill = QUADRANT_COLORS.base,
+    stroke = QUADRANT_COLORS.base
   ) {
-    const { cx, cy, mapRadius: radius, ctx } = this
+    const { cx, cy, mapRadius: radius, ctx, borderWidth } = this
+    const getOffset = (startAngle: number): Coordinate => {
+      if (!emphasis) {
+        return { x: 0, y: 0 }
+      }
+      startAngle /= Math.PI
+      const offsetLength = borderWidth
+      if (startAngle > 2) {
+        return { x: -offsetLength, y: offsetLength }
+      } else if (startAngle > 1.5) {
+        return { x: offsetLength, y: offsetLength }
+      } else if (startAngle > 1) {
+        return { x: offsetLength, y: -offsetLength }
+      } else {
+        return { x: -offsetLength, y: -offsetLength }
+      }
+    }
+
+    const offset = getOffset(startAngle)
     ctx.beginPath()
     ctx.moveTo(cx, cy)
-    ctx.arc(cx, cy, radius + emphasis, startAngle, endAngle)
+    console.log(offset, emphasis)
+    ctx.arc(cx + offset.x, cy + offset.y, radius + emphasis, startAngle, endAngle)
     ctx.closePath()
     ctx.fillStyle = fill
     ctx.strokeStyle = stroke
