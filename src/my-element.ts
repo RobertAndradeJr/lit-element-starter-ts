@@ -447,6 +447,18 @@ export class MyElement extends LitElement {
     graph.drawInternalBorder('vertical')
 
     graph.drawLabels()
+    const textInside = true
+    const kerning = 0
+    graph.drawPriorityLabel('COLLABORATION', 270, 'center', textInside, true, kerning)
+    graph.drawPriorityLabel('ACTION', 180, 'center', textInside, true, kerning)
+    graph.drawPriorityLabel('ENCOURAGEMENT', 225, 'center', textInside, true, kerning)
+    graph.drawPriorityLabel('CHALLENGE', 90, 'center', textInside, true, kerning)
+    graph.drawPriorityLabel('DRIVE', 135, 'center', textInside, true, kerning)
+    graph.drawPriorityLabel('SUPPORT', 135, 'center', textInside, false, kerning)
+    graph.drawPriorityLabel('OBJECTIVITY', 225, 'center', textInside, false, kerning)
+    graph.drawPriorityLabel('RELIABILITY', 180, 'center', textInside, false, kerning)
+
+
   }
 
   protected override firstUpdated(
