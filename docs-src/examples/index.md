@@ -12,7 +12,7 @@ description: A basic example
     padding: 8px;
   }
 </style>
-<my-element>
+<my-element width="450">
   <p>This is child content</p>
 </my-element>
 
@@ -28,7 +28,7 @@ p {
 <h3>HTML</h3>
 
 ```html
-<my-element>
+<my-element width="450">
   <p>This is child content</p>
 </my-element>
 ```
