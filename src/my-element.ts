@@ -193,7 +193,6 @@ export class MyElement extends LitElement {
     
     return html`
       <canvas ${ref(this._canvas)}>${this.accessibilityText}</canvas>
-      ${accessibilityElement}
       ${editControls} 
     `
   }
