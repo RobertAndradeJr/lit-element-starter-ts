@@ -113,7 +113,7 @@ export class MyElement extends LitElement {
   @property({
     type: Boolean
   })
-  edit = false
+  edit = true
 
   /**
    * Width of borders
@@ -203,6 +203,46 @@ export class MyElement extends LitElement {
     this._canvasApp()
   }
 
+  private _drawProfileAvatar(angle: number, vector: number) {
+    console.log("avatar")
+
+    //This needs some updating for canvas, but otherwise good
+    const scale = this.width / 70
+      const radians = (angle - 90) * (Math.PI / 180)
+      const hyp = 12 * vector * scale
+      const x = hyp * Math.cos(radians)
+      const y = hyp * Math.sin(radians)
+
+    const canvas = this._canvas.value as HTMLCanvasElement
+    const ctx = canvas.getContext('2d') as CanvasRenderingContext2D
+
+    const testImage = new Image()
+
+    testImage.onload = () => {
+
+    ctx.save()
+    ctx.beginPath()
+    const offsetX = 150 + x
+    const offsetY = 250 + y
+    const radius = 25
+    ctx.arc(radius+offsetX, radius+offsetY, radius, 0, Math.PI * 2, true)
+    ctx.closePath()
+    ctx.clip()
+
+    ctx.drawImage(testImage, 0+offsetX, 0+offsetY, radius*2, radius*2)
+
+    ctx.beginPath()
+    ctx.arc(offsetX, offsetY, radius, 0, Math.PI * 2, true)
+    ctx.clip()
+    ctx.closePath()
+    ctx.restore()
+      
+    }
+
+    testImage.src = 'https://image.shutterstock.com/image-vector/man-icon-vector-260nw-1040084344.jpg'
+
+  }
+
   private _canvasApp() {
     // const drawCanvas = this._draw.bind(this)
     const { width, height, save } = this
@@ -271,7 +311,7 @@ export class MyElement extends LitElement {
       canvas.addEventListener('mousemove', dragging, false)
       canvas.addEventListener('mouseup', dragEnd, false)
       canvas.addEventListener('mouseout', dragEnd, false)
-
+      console.log('predraw')
       drawScreen()
     }
 
@@ -328,7 +368,9 @@ export class MyElement extends LitElement {
         ctx.fill()
         ctx.stroke()
       }
-
+      console.log('before drawing')
+      this._drawProfileAvatar(-18, 2)
+      this._drawProfileAvatar(18, 2)
       showCode()
     }
 
