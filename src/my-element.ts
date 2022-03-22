@@ -115,6 +115,8 @@ export class MyElement extends LitElement {
   @state()
   save = false
 
+  
+  private cachedImages: { [key: number]: HTMLImageElement } = {}; //Here we define the structure for the cachedImages object: The key will always be a number, the value will always be an HTMLImageElement
   @property()
   accessibilityText = "Test accessibility text"
 
@@ -123,8 +125,20 @@ export class MyElement extends LitElement {
   })
   edit = true
 
+  @property({
+    attribute: false
+  })
+  graph = null
 
+  @property({
+    type: Number
+  })
+  mapRadius = 0 //Radius of the actual shadable, inner content of the graph.
 
+  @property({
+    type: Number
+  })
+  avatarSize = 25
   /**
    * Width of borders
    */
@@ -175,6 +189,27 @@ export class MyElement extends LitElement {
   })
   quadrants = ['D', 'i', 'S', 'C']
 
+  constructor() {
+    super()
+    this.loadImage('https://upload.wikimedia.org/wikipedia/en/9/95/Test_image.jpg', 1)
+    this.loadImage('https://cdn.pixabay.com/photo/2014/06/03/19/38/road-sign-361514_960_720.png', 2)
+  }
+
+  loadImage(src: string, accountId: number) { //Provides a pre-loaded HTMLImageElement so we don't risk calling for the image repeatedly
+    const image = new Image()
+    image.src = src
+    image.onload = () => { //So we should talk about this... we need to find a way to time the initial drawing
+      if (this._canvas.value) { // Basically firstUpdated isn't firing after the images are loaded so they are not rendering properly
+        this._draw()  // Also some of the styling changes when 
+      }
+    }
+    this.cachedImages[accountId] = image
+  }
+
+  getImage(accountId: number) {
+    return this.cachedImages[accountId]
+  }
+
   override render() {
     const editControls = this.edit ? html`
     <pre ${ref(this._code)}>code</pre>
@@ -213,6 +248,31 @@ export class MyElement extends LitElement {
     this.save = false
     this._canvasApp()
   }
+
+  private _drawProfileAvatar(angle: number, vector: number, accountId: number) {
+    const radians = (angle) * (Math.PI / 180) // We will adjust this as necessary based on the orientation of angles from the API
+
+    const canvas = this._canvas.value as HTMLCanvasElement
+    const ctx = canvas.getContext('2d') as CanvasRenderingContext2D
+    ctx.save()
+    ctx.setTransform(1,0,0,1,0,0) // Something is messing with the transform outside this function, we're resetting it to default before beginning
+    ctx.translate(canvas.width/2, canvas.height/2) //set transform matrix to center of canvas
+    const offset = (this.mapRadius/2) * vector // This gives us the distance from center for our profile image
+
+    const xCoord = offset * Math.sin(radians) //these coords are now relative to center of the canvas/graph
+    const yCoord = offset * Math.cos(radians)
+
+    const testImage = this.getImage(accountId)
+    ctx.beginPath()
+    ctx.arc(xCoord, yCoord, this.avatarSize, 0, Math.PI * 2, true)
+    ctx.closePath()
+    ctx.clip()
+    
+    ctx.drawImage(testImage, xCoord-this.avatarSize, yCoord-this.avatarSize, this.avatarSize*2, this.avatarSize*2)
+    ctx.restore()
+
+  }
+  
 
   private _canvasApp() {
     // const drawCanvas = this._draw.bind(this)
@@ -282,13 +342,13 @@ export class MyElement extends LitElement {
       canvas.addEventListener('mousemove', dragging, false)
       canvas.addEventListener('mouseup', dragEnd, false)
       canvas.addEventListener('mouseout', dragEnd, false)
-
+      
       drawScreen()
     }
 
     // draw screen
     const drawScreen = () => {
-      console.log('draw screen')
+
       const {
         point: { width, color, fill, radius, arc1, arc2 },
       } = style
@@ -346,7 +406,6 @@ export class MyElement extends LitElement {
 
     // format string for code
     const showCode = () => {
-      console.log('showcode?')
       const { firstChild } = this._code.value as HTMLPreElement
       const {
         curve: { width, color },
@@ -446,7 +505,7 @@ export class MyElement extends LitElement {
     canvas.height = height || width
     const ctx = canvas.getContext('2d') as CanvasRenderingContext2D
     const graph = new Graph({ ctx, radius: width / 2, borderWidth })
-
+    this.mapRadius = graph.mapRadius
     graph.baseGraph()
 
     if (border) {
@@ -471,7 +530,8 @@ export class MyElement extends LitElement {
     graph.drawPriorityLabel('OBJECTIVITY', 225, 'center', textInside, false, kerning)
     graph.drawPriorityLabel('RELIABILITY', 180, 'center', textInside, false, kerning)
 
-
+    this._drawProfileAvatar(180, 2, 1)
+    this._drawProfileAvatar(125, 1.5, 2)
   }
 
   protected override firstUpdated(
