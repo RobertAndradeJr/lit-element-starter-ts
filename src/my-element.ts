@@ -34,6 +34,11 @@ export class MyElement extends LitElement {
       padding: 1em;
     }
 
+    #accessibilityText {
+      position: absolute;
+      left: -99999px
+    }
+
     #canvas {
       border-radius: 50%;
     }
@@ -112,6 +117,8 @@ export class MyElement extends LitElement {
 
   
   private cachedImages: { [key: number]: HTMLImageElement } = {}; //Here we define the structure for the cachedImages object: The key will always be a number, the value will always be an HTMLImageElement
+  @property()
+  accessibilityText = "Test accessibility text"
 
   @property({
     type: Boolean
@@ -222,10 +229,11 @@ export class MyElement extends LitElement {
       <button @click="${this.save ? this._deleteArc : this._saveArc}">${this.save ? 'Delete' : 'Save'} Arc</button>
     </div>
     ` : undefined
+
+    
     return html`
-      <canvas ${ref(this._canvas)}>Fallback Content</canvas>
-      ${editControls}
-      <slot></slot>
+      <canvas ${ref(this._canvas)}>${this.accessibilityText}</canvas>
+      ${editControls} 
     `
   }
 
@@ -352,6 +360,7 @@ export class MyElement extends LitElement {
 
     // draw screen
     const drawScreen = () => {
+      console.log('draw screen')
       const {
         point: { width, color, fill, radius, arc1, arc2 },
       } = style
@@ -409,6 +418,7 @@ export class MyElement extends LitElement {
 
     // format string for code
     const showCode = () => {
+      console.log('showcode?')
       const { firstChild } = this._code.value as HTMLPreElement
       const {
         curve: { width, color },
