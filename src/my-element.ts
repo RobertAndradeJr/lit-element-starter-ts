@@ -110,11 +110,28 @@ export class MyElement extends LitElement {
   @state()
   save = false
 
+  
+  private cachedImages: { [key: number]: HTMLImageElement } = {}; //Here we define the structure for the cachedImages object: The key will always be a number, the value will always be an HTMLImageElement
+
   @property({
     type: Boolean
   })
   edit = true
 
+  @property({
+    attribute: false
+  })
+  graph = null
+
+  @property({
+    type: Number
+  })
+  mapRadius = 0 //Radius of the actual shadable, inner content of the graph.
+
+  @property({
+    type: Number
+  })
+  avatarSize = 25
   /**
    * Width of borders
    */
@@ -165,6 +182,32 @@ export class MyElement extends LitElement {
   })
   quadrants = ['D', 'i', 'S', 'C']
 
+  constructor() {
+    super()
+    this.loadImage('https://upload.wikimedia.org/wikipedia/en/9/95/Test_image.jpg', 1)
+    this.loadImage('https://cdn.pixabay.com/photo/2014/06/03/19/38/road-sign-361514_960_720.png', 2)
+    // this._draw()
+    // this.init()
+    // this._canvasApp()
+  }
+
+  loadImage(src: string, accountId: number) { //Provides a pre-loaded HTMLImageElement so we don't risk calling for the image repeatedly
+    const image = new Image()
+    image.src = src
+    image.onload = () => { //So we should talk about this... we need to find a way to time the initial drawing
+      if (this._canvas.value) { // Basically firstUpdated isn't firing after the images are loaded so they are not rendering properly
+        this._draw()  // Also some of the styling changes when 
+      }
+    }
+    this.cachedImages[accountId] = image
+  }
+
+  getImage(accountId: number) {
+    console.log(this.cachedImages)
+    console.log(this.cachedImages[accountId])
+    return this.cachedImages[accountId]
+  }
+
   override render() {
     const editControls = this.edit ? html`
     <pre ${ref(this._code)}>code</pre>
@@ -203,45 +246,36 @@ export class MyElement extends LitElement {
     this._canvasApp()
   }
 
-  private _drawProfileAvatar(angle: number, vector: number) {
-    console.log("avatar")
-
+  private _drawProfileAvatar(angle: number, vector: number, accountId: number) {
+    const avatarSize = 25
     //This needs some updating for canvas, but otherwise good
-    const scale = this.width / 70
-      const radians = (angle - 90) * (Math.PI / 180)
-      const hyp = 12 * vector * scale
-      const x = hyp * Math.cos(radians)
-      const y = hyp * Math.sin(radians)
+   
+    // const scale = this.height || this.width //scale
+
+    const radians = (angle) * (Math.PI / 180) //-90 orients upwards? So this is radians from the positive y axis?
 
     const canvas = this._canvas.value as HTMLCanvasElement
     const ctx = canvas.getContext('2d') as CanvasRenderingContext2D
-
-    const testImage = new Image()
-
-    testImage.onload = () => {
-
     ctx.save()
+    ctx.setTransform(1,0,0,1,0,0) // Something is messing with the transform outside this function, we're resetting it to default before beginning
+    ctx.translate(canvas.width/2, canvas.height/2) //set transform matrix to center of canvas
+    const offset = (this.mapRadius/2) * vector // This gives us the distance from center for our profile image
+
+    //angle is theta
+    const xCoord = offset * Math.sin(radians) //these points are relative to center
+    const yCoord = offset * Math.cos(radians)
+
+    const testImage = this.getImage(accountId)
     ctx.beginPath()
-    const offsetX = 150 + x
-    const offsetY = 250 + y
-    const radius = 25
-    ctx.arc(radius+offsetX, radius+offsetY, radius, 0, Math.PI * 2, true)
+    ctx.arc(xCoord, yCoord, avatarSize, 0, Math.PI * 2, true)
     ctx.closePath()
     ctx.clip()
-
-    ctx.drawImage(testImage, 0+offsetX, 0+offsetY, radius*2, radius*2)
-
-    ctx.beginPath()
-    ctx.arc(offsetX, offsetY, radius, 0, Math.PI * 2, true)
-    ctx.clip()
-    ctx.closePath()
+    
+    ctx.drawImage(testImage, xCoord-avatarSize, yCoord-avatarSize, avatarSize*2, avatarSize*2)
     ctx.restore()
-      
-    }
-
-    testImage.src = 'https://image.shutterstock.com/image-vector/man-icon-vector-260nw-1040084344.jpg'
 
   }
+  
 
   private _canvasApp() {
     // const drawCanvas = this._draw.bind(this)
@@ -312,6 +346,7 @@ export class MyElement extends LitElement {
       canvas.addEventListener('mouseup', dragEnd, false)
       canvas.addEventListener('mouseout', dragEnd, false)
       console.log('predraw')
+      
       drawScreen()
     }
 
@@ -368,9 +403,7 @@ export class MyElement extends LitElement {
         ctx.fill()
         ctx.stroke()
       }
-      console.log('before drawing')
-      this._drawProfileAvatar(-18, 2)
-      this._drawProfileAvatar(18, 2)
+
       showCode()
     }
 
@@ -475,7 +508,7 @@ export class MyElement extends LitElement {
     canvas.height = height || width
     const ctx = canvas.getContext('2d') as CanvasRenderingContext2D
     const graph = new Graph({ ctx, radius: width / 2, borderWidth })
-
+    this.mapRadius = graph.mapRadius
     graph.baseGraph()
 
     if (border) {
@@ -500,7 +533,8 @@ export class MyElement extends LitElement {
     graph.drawPriorityLabel('OBJECTIVITY', 225, 'center', textInside, false, kerning)
     graph.drawPriorityLabel('RELIABILITY', 180, 'center', textInside, false, kerning)
 
-
+    this._drawProfileAvatar(180, 2, 1)
+    this._drawProfileAvatar(125, 1.5, 2)
   }
 
   protected override firstUpdated(
@@ -514,6 +548,7 @@ export class MyElement extends LitElement {
       this._draw()
     }
   }
+  
 }
 
 declare global {
