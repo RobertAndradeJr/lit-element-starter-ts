@@ -193,9 +193,6 @@ export class MyElement extends LitElement {
     super()
     this.loadImage('https://upload.wikimedia.org/wikipedia/en/9/95/Test_image.jpg', 1)
     this.loadImage('https://cdn.pixabay.com/photo/2014/06/03/19/38/road-sign-361514_960_720.png', 2)
-    // this._draw()
-    // this.init()
-    // this._canvasApp()
   }
 
   loadImage(src: string, accountId: number) { //Provides a pre-loaded HTMLImageElement so we don't risk calling for the image repeatedly
@@ -210,8 +207,6 @@ export class MyElement extends LitElement {
   }
 
   getImage(accountId: number) {
-    console.log(this.cachedImages)
-    console.log(this.cachedImages[accountId])
     return this.cachedImages[accountId]
   }
 
@@ -255,12 +250,7 @@ export class MyElement extends LitElement {
   }
 
   private _drawProfileAvatar(angle: number, vector: number, accountId: number) {
-    const avatarSize = 25
-    //This needs some updating for canvas, but otherwise good
-   
-    // const scale = this.height || this.width //scale
-
-    const radians = (angle) * (Math.PI / 180) //-90 orients upwards? So this is radians from the positive y axis?
+    const radians = (angle) * (Math.PI / 180) // We will adjust this as necessary based on the orientation of angles from the API
 
     const canvas = this._canvas.value as HTMLCanvasElement
     const ctx = canvas.getContext('2d') as CanvasRenderingContext2D
@@ -269,17 +259,16 @@ export class MyElement extends LitElement {
     ctx.translate(canvas.width/2, canvas.height/2) //set transform matrix to center of canvas
     const offset = (this.mapRadius/2) * vector // This gives us the distance from center for our profile image
 
-    //angle is theta
-    const xCoord = offset * Math.sin(radians) //these points are relative to center
+    const xCoord = offset * Math.sin(radians) //these coords are now relative to center of the canvas/graph
     const yCoord = offset * Math.cos(radians)
 
     const testImage = this.getImage(accountId)
     ctx.beginPath()
-    ctx.arc(xCoord, yCoord, avatarSize, 0, Math.PI * 2, true)
+    ctx.arc(xCoord, yCoord, this.avatarSize, 0, Math.PI * 2, true)
     ctx.closePath()
     ctx.clip()
     
-    ctx.drawImage(testImage, xCoord-avatarSize, yCoord-avatarSize, avatarSize*2, avatarSize*2)
+    ctx.drawImage(testImage, xCoord-this.avatarSize, yCoord-this.avatarSize, this.avatarSize*2, this.avatarSize*2)
     ctx.restore()
 
   }
@@ -353,14 +342,13 @@ export class MyElement extends LitElement {
       canvas.addEventListener('mousemove', dragging, false)
       canvas.addEventListener('mouseup', dragEnd, false)
       canvas.addEventListener('mouseout', dragEnd, false)
-      console.log('predraw')
       
       drawScreen()
     }
 
     // draw screen
     const drawScreen = () => {
-      console.log('draw screen')
+
       const {
         point: { width, color, fill, radius, arc1, arc2 },
       } = style
@@ -418,7 +406,6 @@ export class MyElement extends LitElement {
 
     // format string for code
     const showCode = () => {
-      console.log('showcode?')
       const { firstChild } = this._code.value as HTMLPreElement
       const {
         curve: { width, color },
@@ -558,7 +545,6 @@ export class MyElement extends LitElement {
       this._draw()
     }
   }
-  
 }
 
 declare global {
