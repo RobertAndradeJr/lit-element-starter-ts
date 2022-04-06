@@ -23,3 +23,9 @@ export interface Point {
   cp1: Coordinate;
   cp2?: Coordinate;
 }
+
+export interface TestUser {
+  id: number;
+  angle: number;
+  vector: number;
+}
