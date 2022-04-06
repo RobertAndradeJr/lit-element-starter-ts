@@ -123,7 +123,7 @@ export class MyElement extends LitElement {
   @property({
     type: Boolean
   })
-  edit = true
+  edit = false
 
   @property({
     attribute: false
