@@ -1,4 +1,4 @@
-import { Colors, Props, Point, Coordinate } from "./types"
+import { Colors, Props, TestUser, Coordinate } from "./types"
 import { FONT_STACK, QUADRANT_COLORS, QUADRANT_LABELS } from "./util/constants"
 
 export class Graph {
@@ -126,25 +126,24 @@ export class Graph {
 
   }
 
-  drawQuadrants(quadrants = QUADRANT_LABELS, stylePath?: Point) {
-    const { colors, ctx } = this
+  drawQuadrants(quadrants = QUADRANT_LABELS, user: TestUser) {
+    const { colors, ctx, mapRadius, width } = this
+    const center = width / 2
 
-    const _clip = (stylePath: Point) => {
-      const { p1, cp1, cp2, p2 } = stylePath
+    const _clip = (user: TestUser) => {
+      const { angle, vector } = user
+      const radians = (angle) * (Math.PI / 180) // We will adjust this as necessary based on the orientation of angles from the API
+      const hyp = (mapRadius / 2) * vector // This gives us the distance from center for our profile image
+
+
+      const xCoord = hyp * Math.sin(radians) //these coords are now relative to center of the canvas/graph
+      const yCoord = hyp * Math.cos(radians)
+
       ctx.save()
       ctx.beginPath()
-      ctx.moveTo(p1.x, p1.y)
-      if (cp2) {
-        ctx.bezierCurveTo(cp1.x, cp1.y, cp2.x, cp2.y, p2.x, p2.y)
-        ctx.moveTo(p2.x, p2.y)
-        ctx.bezierCurveTo(cp2.x, cp2.y + this.height, cp1.x, cp1.y + this.height, p1.x, p1.y)
+      ctx.ellipse(center + xCoord, center + yCoord, mapRadius * 5 / 6, mapRadius, -radians, 0, 2 * Math.PI)
 
-      } else {
-        ctx.quadraticCurveTo(cp1.x, cp1.y, p2.x, p2.y)
-        ctx.moveTo(p2.x, p2.y)
-        ctx.quadraticCurveTo(cp1.x, cp1.y + this.height, p1.x, p1.y)
-      }
-      ctx.closePath()
+
       ctx.clip()
       _draw()
       ctx.restore()
@@ -166,8 +165,8 @@ export class Graph {
       }
     }
 
-    if (stylePath) {
-      _clip(stylePath)
+    if (user) {
+      _clip(user)
     } else {
       _draw()
     }

@@ -275,7 +275,6 @@ export class MyElement extends LitElement {
   
 
   private _canvasApp() {
-    // const drawCanvas = this._draw.bind(this)
     const { width, height, save } = this
     const canvas = this._canvas.value as HTMLCanvasElement
     canvas.width = width
@@ -499,12 +498,22 @@ export class MyElement extends LitElement {
   }
 
   private _draw() {
-    const { border, quadrants, borderWidth, width, height, stylePath } = this
+    const { border, quadrants, borderWidth, width, height } = this
     const canvas = this._canvas.value as HTMLCanvasElement
     canvas.width = width
     canvas.height = height || width
     const ctx = canvas.getContext('2d') as CanvasRenderingContext2D
     const graph = new Graph({ ctx, radius: width / 2, borderWidth })
+    const user1 = {
+      angle: 180,
+      vector: 2,
+      id: 1
+    }
+    const user2 = {
+      angle: 125,
+      vector: 1.5,
+      id: 2
+    }
     this.mapRadius = graph.mapRadius
     graph.baseGraph()
 
@@ -512,7 +521,7 @@ export class MyElement extends LitElement {
       graph.drawDashedBorder(border)
     }
 
-    graph.drawQuadrants(quadrants, stylePath)
+    graph.drawQuadrants(quadrants, user2)
 
     graph.drawInternalBorder('horizontal')
 
@@ -530,8 +539,8 @@ export class MyElement extends LitElement {
     graph.drawPriorityLabel('OBJECTIVITY', 225, 'center', textInside, false, kerning)
     graph.drawPriorityLabel('RELIABILITY', 180, 'center', textInside, false, kerning)
 
-    this._drawProfileAvatar(180, 2, 1)
-    this._drawProfileAvatar(125, 1.5, 2)
+    this._drawProfileAvatar(user1.angle, user1.vector, user1.id)
+    this._drawProfileAvatar(user2.angle, user2.vector, user2.id)
   }
 
   protected override firstUpdated(
